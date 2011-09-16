@@ -1,0 +1,56 @@
+input {
+  padding: 0px;
+  margin: 1px;
+}
+
+body {
+  background: black;
+  margin: 0px;
+  overflow: hidden;
+}
+
+#renderer {
+  margin: 5% 20% 0 20%;
+}
+
+#chat {
+  background: #333;
+  color: white;
+  opacity: 0.7;
+  width: 50%;
+  height: 150px;
+  margin: 0.2em 20% 0.2em 20%;
+  overflow: auto;
+}
+
+#chat_box {
+  background: #666;
+  color: white;
+  opacity: 0.7;
+  width: 50%;
+  height: 20px;
+  margin: 0 20% 0 20%;
+}
+
+#chat_line {
+  margin: 0px;
+  padding: 0px;
+}
+
+#chat_box_input {
+  margin-left: 2%;
+  margin-right: 2%;
+  width: 95%;
+}
+
+#chat_time {
+  color: orange;
+}
+
+#chat_user {
+  color: lightblue;
+}
+
+#chat_item {
+  
+}
