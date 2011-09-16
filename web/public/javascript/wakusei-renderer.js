@@ -26,8 +26,6 @@ function WakuseiRenderer() {
   this.scene    = new THREE.Scene();
   
   this.scene_objects = {};
-  
-  this.geometry = new THREE.CubeGeometry(1, 1, 1);
 }
 
 WakuseiRenderer.prototype.add = function(object) {
@@ -37,10 +35,11 @@ WakuseiRenderer.prototype.add = function(object) {
   var width    = object.b.w;
   var height   = object.b.h;
   
+  var geometry = new THREE.CubeGeometry(1, 1, 1);
   var material_params = { shading: THREE.SmoothShading };
   
   switch (object.t) {
-    case "foliage":    
+    case "foliage":
       material_params.color = 0x006400;
       z_coord = -1;
       break;
@@ -49,6 +48,7 @@ WakuseiRenderer.prototype.add = function(object) {
       z_coord = 0;
       break;
     case "npc":
+      geometry = new THREE.SphereGeometry(1, 10, 10);
       material_params.color = 0x8B0000;
       z_coord = 1;
       break;
@@ -57,6 +57,17 @@ WakuseiRenderer.prototype.add = function(object) {
       z_coord = 2;
       break;
     case "player":
+      //geometry = new THREE.Geometry();
+      //var v1 = new THREE.Vector2( 1,  0),
+      //    v2 = new THREE.Vector2(-1, -1),
+      //    v3 = new THREE.Vector2(-1,  1);
+      //geometry.vertices.push(new THREE.Vertex(v1));
+      //geometry.vertices.push(new THREE.Vertex(v2));
+      //geometry.vertices.push(new THREE.Vertex(v3));
+      //geometry.faces.push(new THREE.Face3(0, 2, 1));
+      //geometry.computeFaceNormals();
+      
+      geometry = new THREE.SphereGeometry(1, 10, 10);
       if (object.id == wakusei_client.player.id) {
         material_params.color = 0x00CED1;
       } else {
@@ -67,7 +78,7 @@ WakuseiRenderer.prototype.add = function(object) {
   }
   
   var material = new THREE.MeshLambertMaterial(material_params);
-  var mesh = new THREE.Mesh(this.geometry, material);
+  var mesh = new THREE.Mesh(geometry, material);
   mesh.wakusei = {
     type: object.t
   };

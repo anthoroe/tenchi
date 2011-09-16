@@ -2,7 +2,8 @@ var EventEmitter = require('events').EventEmitter,
     Randomizer   = require('./../lib/randomizer').Randomizer,
     Player       = require("./entities/player").Player,
     Npc          = require("./entities/npc").Npc,
-    Foliage      = require("./entities/foliage").Foliage;
+    Foliage      = require("./entities/foliage").Foliage,
+    Building     = require("./entities/building").Building;
     
 const OPS = {
   ENTITY_SPAWN:   0,
@@ -28,8 +29,9 @@ function World() {
 World.prototype = new EventEmitter();
 
 World.prototype.build = function() {
+  var self = this;
+  
   var randomizer = new Randomizer();
-
   var range = 2000;
   for (var i = 0; i < 1000; i++) {
     var foliage = new Foliage();
@@ -39,6 +41,42 @@ World.prototype.build = function() {
     foliage.bounds.h   = randomizer.random(10) + 10;
     this.s_entities[foliage.id] = foliage;
   }
+  
+  var building = new Building();
+  building.position.x = 100;
+  building.position.y = 100;
+  building.bounds.w   = 100;
+  building.bounds.h   = 100;
+  this.s_entities[building.id] = building;
+  
+  var building = new Building();
+  building.position.x = -100;
+  building.position.y = -100;
+  building.bounds.w   = 50;
+  building.bounds.h   = 200;
+  this.s_entities[building.id] = building;
+
+  this.npc_count = 0;
+  this.npc_limit = 50;
+  this.npc_respawn = 500;
+  this.spawner = setInterval(function() {
+    if (self.npc_count < self.npc_limit) {
+      var npc = new Npc();
+      npc.position.x = randomizer.random(range) + -(range / 2);
+      npc.position.y = randomizer.random(range) + -(range / 2);
+      npc.on('entity_move', function(npc) {
+        self.on_entity_move(npc);
+      });
+      npc.on('entity_despawn', function(npc) {
+        self.npc_count -= 1;
+        self.on_entity_despawn(npc);
+        delete self.entities[npc.id];
+      });
+      self.entities[npc.id] = npc;
+      self.on_entity_spawn(self.entities[npc.id]);
+      self.npc_count += 1;
+    }
+  }, self.npc_respawn);
 }
 
 World.prototype.on_update = function(t, dt) {
@@ -70,18 +108,30 @@ World.prototype.on_connection = function(socket) {
   player.on('entity_move', function(e) {
     self.on_entity_move(e);
   });
+  player.on('entity_despawn', function(e) {
+    self.on_entity_despawn(e);
+  });
   
   this.players[socket.id] = player;
-  this.broadcast(OPS.ENTITY_SPAWN, player.def());
+  this.on_entity_spawn(this.players[socket.id]);
 }
 
 World.prototype.on_disconnect = function(socket) {
+  this.players[socket.id].destroy();
   this.broadcast(OPS.ENTITY_DESPAWN, this.players[socket.id].def());
   delete this.players[socket.id];
 }
 
 World.prototype.on_entity_move = function(entity) {
   this.broadcast(OPS.ENTITY_MOVE, entity.def());
+}
+
+World.prototype.on_entity_spawn = function(entity) {
+  this.broadcast(OPS.ENTITY_SPAWN, entity.def());
+}
+
+World.prototype.on_entity_despawn = function(entity) {
+  this.broadcast(OPS.ENTITY_DESPAWN, entity.def());
 }
 
 World.prototype.broadcast = function(op, message) {
