@@ -168,7 +168,7 @@ WakuseiClient.prototype.set_screen = function(screen) {
 */
 WakuseiClient.prototype.player_move = function(direction) {
   if (this.chatting) return;
-  this.send(PLAYER_ACTIONS.MOVE, { r: direction * (Math.PI / 180) });
+  this.send(PLAYER_ACTIONS.MOVE, { r: direction * (Math.PI / 180) }, true);
 }
 
 WakuseiClient.prototype.player_stop = function() {

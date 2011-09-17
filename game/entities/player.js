@@ -27,6 +27,7 @@ Player.prototype.init = function(client) {
   this.is_moveable = true;
   this.move_rate   = 200;
   this.move_acc    = 300;
+  this.move_stop   = true;
   this.bounds      = { w: 10, h: 10 };
 
   this.client.on(PLAYER_ACTIONS.MOVE, function(message) {

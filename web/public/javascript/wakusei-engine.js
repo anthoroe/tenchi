@@ -72,8 +72,11 @@ WakuseiNetwork.prototype.disconnect = function() {
   this.socket.disconnect();
 }
 
-WakuseiNetwork.prototype.send = function(command, message) {
-  this.socket.emit(command, message);
+WakuseiNetwork.prototype.send = function(command, message, volatile) {
+  if (volatile)
+    this.socket.volatile.emit(command, message);
+  else
+    this.socket.emit(command, message);
 }
 
 /**

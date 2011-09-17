@@ -17,6 +17,12 @@ function World() {
   this.entities   = {};
   this.s_entities = {};
   
+  this.game_tick = 0;
+  this.packet = {
+    count:    0,
+    rate_mod: 10
+  }
+  
   // network messages
   this.on('on_connection', this.on_connection);
   this.on('on_disconnect', this.on_disconnect);
@@ -80,11 +86,17 @@ World.prototype.build = function() {
 }
 
 World.prototype.on_update = function(t, dt) {
+  this.game_tick = t;
+
   for (var id in this.players) {
     this.players[id].update(t, dt);
   }
   for (var id in this.entities) {
     this.entities[id].update(t, dt);
+  }
+  
+  if (Math.floor(this.game_tick * 1000) % 60 == 0) {
+    this.packet.count = 0;
   }
 }
 
@@ -106,7 +118,7 @@ World.prototype.on_connection = function(socket) {
   }
   
   player.on('entity_move', function(e) {
-    self.on_entity_move(e);
+    self.on_entity_move(e, 'medium');
   });
   player.on('entity_despawn', function(e) {
     self.on_entity_despawn(e);
@@ -118,25 +130,46 @@ World.prototype.on_connection = function(socket) {
 
 World.prototype.on_disconnect = function(socket) {
   this.players[socket.id].destroy();
-  this.broadcast(OPS.ENTITY_DESPAWN, this.players[socket.id].def());
+  this.broadcast(OPS.ENTITY_DESPAWN, this.players[socket.id].def(), 'high');
   delete this.players[socket.id];
 }
 
-World.prototype.on_entity_move = function(entity) {
-  this.broadcast(OPS.ENTITY_MOVE, entity.def());
+World.prototype.on_entity_move = function(entity, priority) {
+  if (!priority)
+    priority = 'low';
+  this.broadcast(OPS.ENTITY_MOVE, entity.def(), priority);
 }
 
 World.prototype.on_entity_spawn = function(entity) {
-  this.broadcast(OPS.ENTITY_SPAWN, entity.def());
+  this.broadcast(OPS.ENTITY_SPAWN, entity.def(), 'high');
 }
 
 World.prototype.on_entity_despawn = function(entity) {
-  this.broadcast(OPS.ENTITY_DESPAWN, entity.def());
+  this.broadcast(OPS.ENTITY_DESPAWN, entity.def(), 'high');
 }
 
-World.prototype.broadcast = function(op, message) {
-  for (var id in this.players) {
-    this.players[id].client.json.send({ op: op, m: message });
+World.prototype.broadcast = function(op, message, priority) {
+  switch (priority) {
+    case 'high':
+      for (var id in this.players) {
+        this.packet.count += 1;
+        this.players[id].client.json.send({ op: op, m: message });
+      }
+      break;
+    case 'medium':
+      for (var id in this.players) {
+        this.packet.count += 1;
+        this.players[id].client.volatile.json.send({ op: op, m: message });
+      }
+      break;
+    case 'low':
+      if (Math.floor(this.game_tick * 1000) % this.packet.rate_mod == 0) {
+        for (var id in this.players) {
+          this.packet.count += 1;
+          this.players[id].client.volatile.json.send({ op: op, m: message });
+        }
+      }
+      break;
   }
 }
 

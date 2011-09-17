@@ -13,6 +13,7 @@ function Npc() {
   this.is_harmable = true;
   this.move_rate   = 200;
   this.move_acc    = 300;
+  this.move_stop   = false;
   this.bounds      = { w: 10, h: 10 };
 }
 
@@ -32,8 +33,12 @@ Npc.prototype.def = function() {
 
 Npc.prototype.simulate = function(t, dt) {
   var randomizer = new Randomizer();
-  this.rotation = randomizer.random(360);
-  this.set(ENTITY_ACTIONS.MOVE, true);
+  if (randomizer.random(100) > 75) {
+    this.rotation = randomizer.random(360);
+    this.set(ENTITY_ACTIONS.MOVE, true);
+  } else {
+    this.set(ENTITY_ACTIONS.MOVE, false);
+  }
 }
 
 try {
