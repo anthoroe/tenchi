@@ -30,7 +30,7 @@ function main() {
 function web_init() {
   var web = express.createServer();
   web.configure(function() {
-  	web.use(express.static(__dirname +'/web/public'));
+  	web.use(express.static(__dirname + '/web/public'));
   	web.set('view engine', 'jade');
   	web.set('views', __dirname +'/web/views');
   });

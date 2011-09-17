@@ -24,10 +24,13 @@ Npc.prototype.def = function() {
     id: this.id,
     t:  this.type,
     n:  this.name,
+    a:  this.action,
     r:  this.rotation,
     v:  this.velocity,
     p:  this.position,
-    b:  this.bounds
+    b:  this.bounds,
+    mr: this.move_rate,
+    ma: this.move_acc
   };
 }
 
