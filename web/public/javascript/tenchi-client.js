@@ -33,6 +33,7 @@ function TenchiClient() {
   for (var i = 0; i < 256; i++) {
     this.key_tracker[i] = 0;
   }
+  this.last_direction = 0;
   
   // chat
   this.chatting = false;
@@ -43,16 +44,6 @@ function TenchiClient() {
 
 TenchiClient.prototype.set_client_id = function(object) {
   this.tenchi_engine.client_id = object.id;
-
-  // display stats
-  stats.domElement.style.position = 'absolute';
-  stats.domElement.style.top = '0px';
-  $("body").append(stats.domElement);
-  $("#chat").css("top", ($(window).height() - $("#chat").css("height") + 20));
-}
-
-TenchiClient.prototype.player_chat = function(message) {
-  this.chat_history.push(message);
 }
 
 /**
@@ -68,7 +59,8 @@ TenchiClient.prototype.player_chat = function(message) {
 */
 TenchiClient.prototype.player_move = function(direction) {
   if (this.chatting) return;
-  this.send(PLAYER_ACTIONS.MOVE, { r: direction * (Math.PI / 180) }, true);
+  if (direction != this.last_direction)
+    this.send(PLAYER_ACTIONS.MOVE, { r: direction * (Math.PI / 180) }, true);
 }
 
 TenchiClient.prototype.player_stop = function() {

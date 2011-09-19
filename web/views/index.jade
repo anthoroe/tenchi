@@ -4,4 +4,9 @@ div#chat_box
   input#chat_box_input(type="textbox")
 script(type="text/javascript")
   var tenchi_client = new TenchiClient();
+  
+  // display stats
   var stats = new Stats();
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.top = '0px';
+  $("body").append(stats.domElement);
