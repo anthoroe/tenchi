@@ -4,6 +4,13 @@ const ENTITY_ACTIONS = {
   MOVE: 1
 };
 
+const OPS = {
+  0:   'object_spawned',
+  1:   'object_despawned',
+  2:   'object_moved',
+  100: 'client_id'
+};
+
 // The ever important bind function
 function toArray(obj) {
     return Array.prototype.slice.call(obj);
@@ -67,7 +74,7 @@ TenchiNetwork.prototype.init = function(host) {
     self.events.emit('connected');
   });
   this.socket.on('message', function(message) {
-    self.events.emit('network_message', message);
+    self.events.emit(OPS[message.op], message.m);
   });
   this.socket.on('disconnect', function() {
     self.events.emit('disconnected');
@@ -91,26 +98,46 @@ TenchiNetwork.prototype.send = function(command, message, volatile) {
 function TenchiEngine(client) {
   var self = this;
   
+  this.pid     = null;
+  this.tick    = 0;
+  
   this.client    = client;
   this.events    = new TenchiEvents();
   this.network   = new TenchiNetwork(this.events);
-  this.renderer  = new TenchiRenderer();
-
-  this.pid     = null;
-  this.kill    = false;
-  this.tick    = 0;
+  this.renderer  = new TenchiRenderer(this);
   
-  this.start();
+  this.objects   = {};
+  this.client_id = null;
+  this.player    = null;
   
+  // network events
   this.events.on('disconnected', function() {
     self.kill();
+  });
+  this.events.on('client_id', function(object) {
+    self.client_id = object.id;
+    // init and start the renderer
+    self.renderer.init();
+    // start the engine loop
+    self.start();  
+  });
+  
+  // object spawning / moving
+  this.events.on('object_spawned', function(object) {
+    self.object_spawned(object);
+  });
+  this.events.on('object_despawned', function(object) {
+    self.object_despawned(object);
+  });
+  this.events.on('object_moved', function(object) {
+    self.object_moved(object);
   });
 }
 
 TenchiEngine.prototype.on_tick = function(self, t, dt) {
-  for (var id in self.client.objects) {
-    if (self.client.objects[id].t == "npc")
-      self.entity_update(self.client.objects[id], t, dt);
+  for (var id in self.objects) {
+    if (self.objects[id].t == "player" || self.objects[id].t == "npc")
+      self.renderer.update(self.objects[id]);
   }
 }
 
@@ -120,10 +147,8 @@ TenchiEngine.prototype.start = function() {
       on_done      = self.on_done,
       accumulator  = 0,
       dt           = DT,
-      current_time = new Date().getTime();
-      
-  this.kill = false;
-  
+      current_time = new Date().getTime();    
+
   function loop() {
     var new_time = new Date().getTime();
     var delta    = (new_time - current_time) / 1000;
@@ -144,41 +169,30 @@ TenchiEngine.prototype.start = function() {
 }
 
 TenchiEngine.prototype.kill = function() {
-  this.kill = true;
   if (this.pid) {
     clearInterval(this.pid);
   }
 }
 
-TenchiEngine.prototype.entity_is = function(entity, flag) {
-  return (entity.a & flag) == flag;
+TenchiEngine.prototype.object_spawned = function(object) {
+  if (object.id == this.client_id)
+    this.player = object;  
+  this.objects[object.id] = object;
+  this.renderer.add(object);
 }
 
-TenchiEngine.prototype.entity_update = function(entity, t, dt) {
-  var rotation  = entity.r;
-  var max_speed = entity.mr;
-  var acc_speed = entity.ma;
-  
-  var acc     = this.entity_is(entity, ENTITY_ACTIONS.MOVE) ? dt * acc_speed : 0;
-  var speed_x = entity.v.x + (acc * Math.sin(rotation));
-  var speed_y = entity.v.y - (acc * Math.cos(rotation));
-  var speed   = Math.sqrt(Math.pow(speed_x, 2) + Math.pow(speed_y, 2));
-
-  if (speed > max_speed) {
-    speed_x = speed_x / speed * max_speed;
-    speed_y = speed_y / speed * max_speed;
-  }
-
-  entity.v.x = speed_x;
-  entity.v.y = speed_y;
-
-  entity.p.x = this.lerp(entity.p.x, (entity.p.x + speed_x * dt), t % 1);
-  entity.p.y = this.lerp(entity.p.y, (entity.p.y + speed_y * dt), t % 1);
-  
-  this.renderer.update(entity);
+TenchiEngine.prototype.object_despawned = function(object) {
+  this.renderer.remove(object);
+  delete this.objects[object.id];
 }
 
-TenchiEngine.prototype.lerp = function(a, b, t) {
-  return (a + t * (b - a));
+TenchiEngine.prototype.update_object = function(object) {
+  object.p.o = this.objects[object.id].p; // old position
+  this.objects[object.id] = object;
 }
 
+TenchiEngine.prototype.object_moved = function(object) {
+  if (object.id == this.client_id)
+    this.player = object;
+  this.update_object(object);
+}

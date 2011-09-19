@@ -36,7 +36,7 @@ Npc.prototype.def = function() {
 
 Npc.prototype.simulate = function(t, dt) {
   var randomizer = new Randomizer();
-  if (randomizer.random(100) > 75) {
+  if (randomizer.random(100) > 50) {
     this.rotation = randomizer.random(360);
     this.set(ENTITY_ACTIONS.MOVE, true);
   } else {

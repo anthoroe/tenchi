@@ -1,10 +1,3 @@
-const OPS = {
-  0:   'object_spawned',
-  1:   'object_despawned',
-  2:   'object_moved',
-  100: 'client_id'
-};
-
 const PLAYER_ACTIONS = {
   MOVE: 0,
   STOP: 1
@@ -14,8 +7,8 @@ function TenchiClient() {
   //-----------------------------------
   // setup
   //-----------------------------------
-  var tenchi_client = this;
-  var tenchi_engine = this.tenchi_engine = new TenchiEngine(tenchi_client);
+  var self = this;
+  this.tenchi_engine = new TenchiEngine(self);
   
   // network init
   this.tenchi_engine.network.init('http://127.0.0.1:8080');
@@ -23,41 +16,17 @@ function TenchiClient() {
   //-----------------------------------
   // events
   //-----------------------------------
-  this.tenchi_engine.events.on('client_id', bind(tenchi_client, tenchi_client.set_client_id));
-  this.tenchi_engine.events.on('login', bind(tenchi_client, tenchi_client.login));
-  this.tenchi_engine.events.on('login_failed', bind(tenchi_client, tenchi_client.login_failed));
-  this.tenchi_engine.events.on('player_move', bind(tenchi_client, tenchi_client.player_move));
-  this.tenchi_engine.events.on('player_stop', bind(tenchi_client, tenchi_client.player_stop));
-  
-  // screen
-  this.tenchi_engine.events.on('set_screen', bind(tenchi_client, tenchi_client.set_screen));
+  this.tenchi_engine.events.on('player_move', bind(self, self.player_move));
+  this.tenchi_engine.events.on('player_stop', bind(self, self.player_stop));
   
   // keys
-  this.tenchi_engine.events.on('key_down', bind(tenchi_client, tenchi_client.key_down));
-  this.tenchi_engine.events.on('key_up', bind(tenchi_client, tenchi_client.key_up));
-  this.tenchi_engine.events.on('key_event', bind(tenchi_client, tenchi_client.key_event));
-  this.tenchi_engine.events.on('mouse_event', bind(tenchi_client, tenchi_client.mouse_event));
-  
-  // object spawning / moving
-  this.tenchi_engine.events.on('object_spawned', bind(tenchi_client, tenchi_client.object_spawned));
-  this.tenchi_engine.events.on('object_despawned', bind(tenchi_client, tenchi_client.object_despawned));
-  this.tenchi_engine.events.on('object_moved', bind(tenchi_client, tenchi_client.object_moved));
+  this.tenchi_engine.events.on('key_down',    bind(self, self.key_down));
+  this.tenchi_engine.events.on('key_up',      bind(self, self.key_up));
+  this.tenchi_engine.events.on('key_event',   bind(self, self.key_event));
+  this.tenchi_engine.events.on('mouse_event', bind(self, self.mouse_event));
   
   // chat
-  this.tenchi_engine.events.on('player_chat', bind(tenchi_client, tenchi_client.player_chat));
-  
-  // network events
-  this.tenchi_engine.events.on('network_message', function(message) {
-    tenchi_engine.events.emit(OPS[message.op], message.m)
-  });
-  
-  //-----------------------------------
-  // management
-  //-----------------------------------
-  this.objects = {};
-
-  this.client_id = null;
-  this.player = null;
+  this.tenchi_engine.events.on('player_chat', bind(self, self.player_chat));
   
   // keyboard
   this.key_tracker = [];
@@ -68,17 +37,13 @@ function TenchiClient() {
   // chat
   this.chatting = false;
   this.chat_input = '';
+  
+  this.help();
 }
 
-TenchiClient.prototype.set_client_id = function(obj) {
-  this.client_id = obj.id;
-  
-  // now that we have an id from the server init the renderer
-  this.help();
-  // init tenchi renderer
-  this.tenchi_engine.renderer.init();
-  // start render loop
-  render_loop();
+TenchiClient.prototype.set_client_id = function(object) {
+  this.tenchi_engine.client_id = object.id;
+
   // display stats
   stats.domElement.style.position = 'absolute';
   stats.domElement.style.top = '0px';
@@ -88,29 +53,6 @@ TenchiClient.prototype.set_client_id = function(obj) {
 
 TenchiClient.prototype.player_chat = function(message) {
   this.chat_history.push(message);
-}
-
-TenchiClient.prototype.object_spawned = function(object) {
-  if (object.id == this.client_id)
-    this.player = object;  
-  this.objects[object.id] = object;
-  this.tenchi_engine.renderer.add(object);
-}
-
-TenchiClient.prototype.object_despawned = function(object) {
-  this.tenchi_engine.renderer.remove(object);
-  delete this.objects[object.id];
-}
-
-TenchiClient.prototype.update_object = function(object) {
-  this.objects[object.id] = object;
-  this.tenchi_engine.renderer.update(object);
-}
-
-TenchiClient.prototype.object_moved = function(object) {
-  if (object.id == this.client_id)
-    this.player = object;
-  this.update_object(object);
 }
 
 /**

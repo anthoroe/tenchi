@@ -20,7 +20,9 @@ var VIEW_ANGLE = 45,
 var X = WIDTH  / 2;
 var Y = HEIGHT / 2;
 
-function TenchiRenderer() {
+function TenchiRenderer(engine) {
+  this.engine   = engine;
+  
   this.renderer = new THREE.WebGLRenderer();
   this.camera   = new THREE.Camera(VIEW_ANGLE, ASPECT, NEAR, FAR);
   this.scene    = new THREE.Scene();
@@ -41,7 +43,7 @@ TenchiRenderer.prototype.add = function(object) {
   switch (object.t) {
     case "foliage":
       material_params.color = 0x006400;
-      z_coord = -1;
+      z_coord = -2;
       break;
     case "building":
       material_params.color = 0xA0522D;
@@ -50,11 +52,11 @@ TenchiRenderer.prototype.add = function(object) {
     case "npc":
       geometry = new THREE.SphereGeometry(1, 10, 10);
       material_params.color = 0x8B0000;
-      z_coord = 1;
+      z_coord = 2;
       break;
     case "projectile":
       material_params.color = 0xFFD700;
-      z_coord = 2;
+      z_coord = 4;
       break;
     case "player":
       //geometry = new THREE.Geometry();
@@ -68,12 +70,12 @@ TenchiRenderer.prototype.add = function(object) {
       //geometry.computeFaceNormals();
       
       geometry = new THREE.SphereGeometry(1, 10, 10);
-      if (object.id == tenchi_client.player.id) {
+      if (object.id == this.engine.player.id) {
         material_params.color = 0x00CED1;
       } else {
         material_params.color = 0xFF1493;
       }
-      z_coord = 3;
+      z_coord = 6;
       break;
   }
   
@@ -99,15 +101,13 @@ TenchiRenderer.prototype.remove = function(object) {
 }
 
 TenchiRenderer.prototype.update = function(object) {
-  this.scene_objects[object.id].position.x = object.p.x;
-  this.scene_objects[object.id].position.y = object.p.y;
-  
-  // update camera
-  if (object.id == tenchi_client.client_id) {
-    this.camera.target = this.scene_objects[object.id]; // always point at player
-    this.camera.position.x = Math.floor(object.p.x);
-    this.camera.position.y = Math.floor(object.p.y);
-  }
+  if (!object.p.o) return;
+
+  object.p.o.x = this.lerp(object.p.o.x, object.p.x, 0.2);
+  object.p.o.y = this.lerp(object.p.o.y, object.p.y, 0.2);
+
+  this.scene_objects[object.id].position.x = object.p.o.x;
+  this.scene_objects[object.id].position.y = object.p.o.y;
 }
 
 TenchiRenderer.prototype.init = function() {
@@ -128,10 +128,28 @@ TenchiRenderer.prototype.init = function() {
   
   var ambientLight = new THREE.AmbientLight(0xFFFFF0);
   this.scene.addLight(ambientLight);
+  
+  // start render loop
+  render_loop();
 }
 
 TenchiRenderer.prototype.draw = function() {
+  // update camera
+  if (this.scene_objects[this.engine.client_id]) {
+    this.camera.target = this.scene_objects[this.engine.client_id]; // always point at player
+    this.camera.position.x = Math.floor(this.scene_objects[this.engine.client_id].position.x);
+    this.camera.position.y = Math.floor(this.scene_objects[this.engine.client_id].position.y);
+  }
+
   this.renderer.render(this.scene, this.camera);
+}
+
+TenchiRenderer.prototype.entity_is = function(entity, flag) {
+  return (entity.a & flag) == flag;
+}
+
+TenchiRenderer.prototype.lerp = function(a, b, t) {
+  return ((1.0 - t) * a) + (t * b);
 }
 
 function render_loop() {
