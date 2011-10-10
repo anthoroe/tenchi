@@ -11,7 +11,7 @@ function TenchiClient() {
   this.tenchi_engine = new TenchiEngine(self);
   
   // network init
-  this.tenchi_engine.network.init('http://127.0.0.1:8080');
+  this.tenchi_engine.network.init('http://127.0.0.1:7000');
   
   //-----------------------------------
   // events

@@ -1,5 +1,5 @@
 var EventEmitter = require('events').EventEmitter,
-    Randomizer   = require('./../lib/randomizer').Randomizer,
+    Randomizer   = require('../lib/randomizer').Randomizer,
     Player       = require("./entities/player").Player,
     Npc          = require("./entities/npc").Npc,
     Foliage      = require("./entities/foliage").Foliage,
