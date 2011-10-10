@@ -129,6 +129,8 @@ World.prototype.on_connection = function(socket) {
 }
 
 World.prototype.on_disconnect = function(socket) {
+  if (!this.players[socket.id]) return false;
+
   this.players[socket.id].destroy();
   this.broadcast(OPS.ENTITY_DESPAWN, this.players[socket.id].def(), 'high');
   delete this.players[socket.id];

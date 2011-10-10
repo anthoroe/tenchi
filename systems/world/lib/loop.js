@@ -2,7 +2,6 @@ var DT = 0.017;
 
 function Loop(tick) {
   this.pid     = null;
-  this.kill    = false;
   this.tick    = tick || 0;
   this.on_tick = function() {};
   this.on_done = function() {};
@@ -15,8 +14,6 @@ Loop.prototype.start = function() {
       accumulator  = 0,
       dt           = DT,
       current_time = new Date().getTime();
-      
-  this.kill = false;
   
   function loop() {
     var new_time = new Date().getTime();
@@ -40,7 +37,6 @@ Loop.prototype.start = function() {
 }
 
 Loop.prototype.kill = function() {
-  this.kill = true;
   if (this.pid) {
     clearInterval(this.pid);
   }
