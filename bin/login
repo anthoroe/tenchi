@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+var Hook      = require('hook.io').Hook,
+    LoginHook = require('../lib/login/login-hook').LoginHook,
+    Logger    = require('../lib/shared/logger').Logger;
+    
+var logger = new Logger();
+    
+var loginhook = new LoginHook({
+  name: "tenchi-login",
+  port: 7500
+});
+
+loginhook.on('hook::ready', function() {
+  logger.log('info', 'login-hook initialized...');
+});
+
+loginhook.start();

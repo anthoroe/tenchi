@@ -9,6 +9,12 @@ body {
   overflow: hidden;
 }
 
+#login {
+  display: visible;
+  text-align: center;
+  color: white;
+}
+
 #renderer {
   margin: 5% 20% 0 20%;
 }
