@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+var Hook    = require('hook.io').Hook,
+    WebHook = require('../lib/web/web-hook').WebHook,
+    Logger  = require('../lib/shared/logger').Logger;
+
+var logger = new Logger();
+
+var webhook = new WebHook({
+  name: "tenchi-web",
+  port: 8080
+});
+
+webhook.on('hook::ready', function() {
+  logger.log('info', 'web-hook initialized...');
+});
+
+webhook.start();

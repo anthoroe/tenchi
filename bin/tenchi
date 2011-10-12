@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+var Hook   = require('hook.io').Hook,
+    Logger = require('../lib/shared/logger').Logger;
+
+var logger = new Logger();
+
+var hook = new Hook({
+  name: "tenchi",
+  debug: true
+});
+
+hook.on('hook::ready', function() {
+  logger.log('info', 'tenchi initialized...');
+});
+
+hook.start();

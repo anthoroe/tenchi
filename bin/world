@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+var Hook      = require('hook.io').Hook,
+    WorldHook = require('../lib/world/world-hook').WorldHook,
+    Logger    = require('../lib/shared/logger').Logger;
+    
+var logger = new Logger();
+    
+var worldhook = new WorldHook({
+  name: "tenchi-world",
+  port: 7000
+});
+
+worldhook.on('hook::ready', function() {
+  logger.log('info', 'world-hook initialized...');
+});
+
+worldhook.start();
